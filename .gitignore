@@ -131,3 +131,26 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Best Cars portfolio: private study material and temporary captures
+/ibm_course_reference/
+/MASTER_PROMPT.md
+/IBM_CAPSTONE_LOCAL_FIRST_VSCODE_MASTER_PROMPT.md
+/submission_option1/
+/IBM_Option1_Text_Evidence.zip
+/IBM_Capstone_Option1_FINAL_28_Tasks.zip
+/server/Dockerfile.lab
+/BestCars_Portfolio_Kit/
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-*
+*.pem
+*.key
+*.rar
+kubeconfig*
+node_modules/
+.venv/
+/server/frontend/build/
+/server/static/

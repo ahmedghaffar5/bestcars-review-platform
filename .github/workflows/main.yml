@@ -1,84 +1,109 @@
-name: Lint Code
+name: Build and test
 
 on:
   push:
     branches: [main, master]
   pull_request:
-    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   lint_python:
-    name: Lint Python Files
+    name: Lint Python
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install Flake8
-        run: python -m pip install flake8
-      - name: Run Flake8
-        run: >
-          flake8 server
+      - run: python -m pip install flake8
+      - run: >
+          flake8 server scripts
           --exclude=server/frontend,server/.venv,server/djangoapp/migrations
           --max-line-length=120
 
   lint_js:
-    name: Lint JavaScript Files
+    name: Lint backend JavaScript
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Install JSHint
-        run: npm install --global jshint
-      - name: Run JSHint
-        run: jshint --config server/database/.jshintrc server/database/*.js
-
-  react_build:
-    name: Build React Application
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/frontend
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: server/frontend/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Build with strict CI warnings
-        env:
-          CI: true
-        run: npm run build
+          node-version: '22'
+      - run: npm install --global jshint
+      - run: jshint --config server/database/.jshintrc server/database/*.js
 
   django_tests:
-    name: Run Django Tests
+    name: Django checks and tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Check and test
-        run: |
+      - run: python -m pip install -r requirements.txt
+      - run: |
           python manage.py check
           python manage.py makemigrations --check --dry-run
           python manage.py test
+
+  react_build:
+    name: Build React
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: server/frontend
+        run: npm ci --include=dev --no-audit --no-fund
+      - name: Strict production build
+        working-directory: server/frontend
+        env:
+          CI: 'true'
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: server/frontend/build/
+          if-no-files-found: error
+          retention-days: 3
+
+  docker_smoke:
+    name: Image and React asset smoke test
+    needs: react_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: server/frontend/build
+      - name: Build Python image containing the React bundle
+        run: docker build -t bestcars-ci server
+      - name: Start disposable local CI container
+        run: |
+          KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          echo "::add-mask::$KEY"
+          docker run -d --name bestcars-ci -p 127.0.0.1:18000:8000 \
+            -e DJANGO_DEBUG=0 -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1 \
+            -e DJANGO_SECRET_KEY="$KEY" bestcars-ci
+      - name: Check rendered pages and actual JavaScript/CSS
+        run: python scripts/smoke_http.py --base http://127.0.0.1:18000 --wait 90
+      - name: Container logs
+        if: always()
+        run: docker logs bestcars-ci
+      - name: Remove only this disposable CI container
+        if: always()
+        run: docker rm -f bestcars-ci

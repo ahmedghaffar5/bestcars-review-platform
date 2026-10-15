@@ -1,90 +1,90 @@
 # Local setup
 
-These commands are for the existing Windows checkout. Run PowerShell commands
-from the repository root:
+Run commands from the repository root unless a step changes directory.
+Use a new local checkout or a separate branch; do not replace a live lab deployment.
 
-```powershell
-python --version
-node --version
-npm --version
-docker version
-docker compose version
-python -m pip install -r .\server\requirements.txt
-```
+## Tools
 
-## MongoDB and Express
+- Python 3.12 for the Django application; Python 3.10+ for the setup helper.
+- Node.js 22 and its npm distribution.
+- Docker with Compose v2.
+- Free ports 8000, 3030, and 5000.
 
-```powershell
-Push-Location .\server\database
-docker compose config
-docker compose up --build -d
-docker compose ps
-Pop-Location
-curl.exe -i http://localhost:3030/fetchDealers
-curl.exe -i http://localhost:3030/fetchDealers/Kansas
-curl.exe -i http://localhost:3030/fetchDealer/3
-curl.exe -i http://localhost:3030/fetchReviews/dealer/29
-```
+## Setup, both PowerShell and bash
 
-The Compose file uses the named `database_mongo_data` volume. Do not use
-`docker compose down -v` when testing persistence.
-
-## Flask sentiment service
-
-```powershell
-Push-Location .\server\djangoapp\microservices
-docker build -t bestcars-sentiment:local .
-docker run --rm -p 5000:5000 bestcars-sentiment:local
-Pop-Location
-curl.exe http://localhost:5000/analyze/Fantastic%20services
-curl.exe http://localhost:5000/analyze/Terrible%20service
-curl.exe http://localhost:5000/analyze/The%20car%20is%20blue
-```
-
-The image downloads the VADER lexicon during the image build, so runtime does not
-depend on an internet download.
-
-## Django and React development checks
-
-```powershell
-Push-Location .\server
-python manage.py check
-python manage.py makemigrations --check --dry-run
-python manage.py migrate
-python manage.py test
-python manage.py runserver 8000
-Pop-Location
-
-Push-Location .\server\frontend
-npm ci
-$env:CI = 'true'
+```text
+python scripts/init_env.py
+cd server/frontend
+npm ci --include=dev --no-audit --no-fund
 npm run build
-Remove-Item Env:CI -ErrorAction SilentlyContinue
-Pop-Location
+cd ../..
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml up --build -d
 ```
 
-Use `/djangoapp/csrf` before a browser or cURL review POST when a CSRF cookie is
-needed. Login and registration retain their IBM-compatible JSON contracts; logout
-supports the required GET route and ends the server session.
+On Linux use `python3` where appropriate. Review `.env` locally, not in a public
+issue or screenshot. The helper refuses to replace existing settings.
 
-## Full local Compose topology
+The Compose stack uses internal URLs `http://api:3030` and
+`http://sentiment:5000`. It does not use IBM proxy URLs. Published demo ports bind
+to `127.0.0.1`; MongoDB is not published to the host. Existing lab containers that
+already use these ports must be stopped deliberately, without deleting volumes.
 
-To run Django with service-DNS URLs (`api:3030` and `sentiment:5000`):
+Open `http://localhost:8000/` and register through the UI. Create an admin:
 
-```powershell
-Push-Location .\server
-docker compose -f docker-compose.local.yml config
-docker compose -f docker-compose.local.yml up --build -d
-docker compose -f docker-compose.local.yml ps
-Pop-Location
+```text
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml exec django python manage.py createsuperuser
 ```
 
-Stop only this stack with `docker compose -f .\server\docker-compose.local.yml
-down`; omit `-v` to preserve Mongo and SQLite data.
+## Status, logs, checks
 
-If Docker reports `containerd-overlayfs/metadata_v2.db: read-only file system`
-during a build, stop and resolve Docker Desktop storage/engine health before
-retrying. Do not use `docker system prune`, reset Docker Desktop, or delete
-volumes as a workaround for this project.
+```text
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml ps
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml logs --tail=50
+python scripts/smoke_http.py --base http://localhost:8000 --integration
+```
 
-Linux uses the same commands with `/` paths and `curl` instead of `curl.exe`.
+To stop without deleting the named volumes:
+
+```text
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml down
+```
+
+Do not add `--volumes` unless intentionally discarding local database contents.
+
+## Application-only development
+
+Start the Compose backend and sentiment services first:
+
+```text
+docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.local.yml up --build -d api sentiment
+```
+
+Create and activate a Python virtual environment, install
+`server/requirements.txt`, build React as above, then run:
+
+```text
+cd server
+python manage.py migrate
+python manage.py runserver 8000
+```
+
+Virtual environment activation is `.venv\Scripts\Activate.ps1` in PowerShell or
+`source .venv/bin/activate` in bash. The root `.env` is loaded before Django
+settings are read; shell environment variables take precedence.
+
+## Blank React pages
+
+Do not copy files into a live pod as a permanent fix. Confirm the build exists,
+rebuild the image, and run `scripts/smoke_http.py` against it. That check verifies
+actual script and stylesheet responses, not just HTTP 200 for the HTML shell.
+
+## npm or network failures
+
+Run `npm ci` outside the Python Docker build. Keep `package-lock.json` and do not
+use `npm audit fix --force` as an automatic response to warnings. If npm fails,
+stop: an incomplete install is not a usable frontend bundle.
+
+## Known boundaries
+
+Package versions are not fully locked for the Python environment, and inherited
+frontend dependencies still need a separate security review. See `SECURITY.md`.
