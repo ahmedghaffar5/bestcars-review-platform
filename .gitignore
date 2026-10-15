@@ -110,6 +110,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Node dependencies and local submission evidence
+node_modules/
+submission_option1/
+
 # Spyder project settings
 .spyderproject
 .spyproject

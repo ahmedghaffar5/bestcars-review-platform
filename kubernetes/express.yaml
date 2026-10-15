@@ -1,0 +1,30 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bestcars-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bestcars-express
+  template:
+    metadata:
+      labels:
+        app: bestcars-express
+    spec:
+      containers:
+        - name: express
+          image: bestcars-express:latest
+          ports:
+            - containerPort: 3030
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bestcars-express
+spec:
+  selector:
+    app: bestcars-express
+  ports:
+    - port: 3030
+      targetPort: 3030

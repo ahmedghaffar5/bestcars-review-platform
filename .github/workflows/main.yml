@@ -1,0 +1,38 @@
+﻿name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python lint tools
+        run: pip install flake8
+
+      - name: Lint Python code
+        run: flake8 server --exclude=server/frontend,node_modules,*/migrations/* --max-line-length=120
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install JS lint tool
+        run: npm install -g jshint
+
+      - name: Lint JS files
+        run: jshint --config server/database/.jshintrc server/database/*.js
+
+      - name: Build React app
+        run: npm install --prefix server/frontend && npm run build --prefix server/frontend

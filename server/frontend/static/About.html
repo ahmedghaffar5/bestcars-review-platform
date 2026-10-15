@@ -1,68 +1,66 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <!-- Link the style sheet here -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About Best Cars</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/bootstrap.min.css">
 </head>
-<div>
-  <nav class="navbar navbar-expand-lg navbar-light" style="background-color:darkturquoise; height: 1in;">
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light" style="background-color:darkturquoise;">
     <div class="container-fluid">
-      <h2 style="padding-right: 5%;">Dealerships</h2>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarText">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" style="font-size: larger;" aria-current="page" href="/">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" style="font-size: larger;" href="/about">About Us</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" style="font-size: larger;" href="/contact">Contact Us</a>
-          </li>
-        </ul>
+      <a class="navbar-brand" href="/">Best Cars</a>
+      <div class="navbar-nav">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link active" href="/about">About Us</a>
+        <a class="nav-link" href="/contact">Contact Us</a>
       </div>
     </div>
   </nav>
-  
-    <div class="card" style="width: 80%;margin: auto; margin-top:5%;">
-      <div class="banner" name="about-header">
-      <!-- Insert header information here -->
-      </div>
-      <div style="display: flex;flex-direction: row; margin:auto">
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person1</p>
-          <p>Person1 Title</p>
-          <p class="card-text">Some text that explains the person1 in about 2 short sentences</p>
-          <p>person1@example.com</p>
+  <main class="container py-5">
+    <section class="card p-4 mb-4">
+      <h1>About Best Cars</h1>
+      <p>Best Cars connects drivers with trusted dealerships across the United States. We make it easier to compare branches, read genuine customer feedback, and choose your next vehicle with confidence.</p>
+      <h2>Our values</h2>
+      <p>We value transparency, helpful service, and an inclusive experience for every customer. Reviews are presented with sentiment indicators to help visitors understand the community's experience at a glance.</p>
+    </section>
+    <h2 class="mb-3">Our team</h2>
+    <section class="row g-4">
+      <article class="col-md-4">
+        <div class="card h-100">
+          <img class="card-img-top" src="/static/person.png" alt="Portrait of Maya Chen">
+          <div class="card-body">
+            <h3 class="h5">Maya Chen</h3>
+            <p class="text-muted">Product Director</p>
+            <p>Guides the customer experience and keeps the portal focused on clear, useful dealership information.</p>
+            <a href="mailto:maya.chen@bestcars.example.com">maya.chen@bestcars.example.com</a>
+          </div>
         </div>
-      </div>
-
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person2</p>
-          <p>Person2 Title</p>
-          <p class="card-text">Some text that explains the person2 in about 2 short sentences</p>
-          <p>person2@example.com</p>
+      </article>
+      <article class="col-md-4">
+        <div class="card h-100">
+          <img class="card-img-top" src="/static/person.png" alt="Portrait of Jordan Williams">
+          <div class="card-body">
+            <h3 class="h5">Jordan Williams</h3>
+            <p class="text-muted">Community Manager</p>
+            <p>Supports reviewers and dealership partners while promoting respectful, authentic feedback.</p>
+            <a href="mailto:jordan.williams@bestcars.example.com">jordan.williams@bestcars.example.com</a>
+          </div>
         </div>
-      </div>
-
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person3</p>
-          <p>Person3 Title</p>
-          <p class="card-text">Some text that explains the person3 in about 2 short sentences</p>
-          <p>person3@example.com</p>
+      </article>
+      <article class="col-md-4">
+        <div class="card h-100">
+          <img class="card-img-top" src="/static/person.png" alt="Portrait of Rafael Ortiz">
+          <div class="card-body">
+            <h3 class="h5">Rafael Ortiz</h3>
+            <p class="text-muted">Engineering Lead</p>
+            <p>Builds dependable services that keep dealer data, reviews, and customer accounts connected.</p>
+            <a href="mailto:rafael.ortiz@bestcars.example.com">rafael.ortiz@bestcars.example.com</a>
+          </div>
         </div>
-      </div>
-    </div>
-    </div>
-    </div>
-    
-</div>
-
+      </article>
+    </section>
+  </main>
+</body>
 </html>

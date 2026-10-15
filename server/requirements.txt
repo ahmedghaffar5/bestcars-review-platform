@@ -1,5 +1,6 @@
-requests
+﻿requests
 Django
 Pillow
 gunicorn
 python-dotenv
+nltk
