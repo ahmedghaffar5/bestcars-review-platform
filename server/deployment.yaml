@@ -21,3 +21,23 @@ spec:
           ports:
             - containerPort: 8000
               protocol: TCP
+          env:
+            - name: DJANGO_DEBUG
+              value: "0"
+            - name: DJANGO_ALLOWED_HOSTS
+              value: "localhost"
+            - name: BACKEND_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dealership-runtime
+                  key: backend-url
+            - name: SENTIMENT_ANALYZER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dealership-runtime
+                  key: sentiment-analyzer-url
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dealership-runtime
+                  key: django-secret-key

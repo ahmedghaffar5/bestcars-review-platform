@@ -43,24 +43,24 @@ const Register = () => {
         <form className='submit_panel' onSubmit={register}>
           <div className='inputs'>
             <div className='input'>
-              <span className='input_field'>Username</span>
-              <input className='input_field' type='text' value={userName} onChange={(e) => setUserName(e.target.value)} />
+              <label htmlFor='username'>Username</label>
+              <input id='username' className='input_field' type='text' required value={userName} onChange={(e) => setUserName(e.target.value)} />
             </div>
             <div className='input'>
-              <span className='input_field'>First Name</span>
-              <input className='input_field' type='text' value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              <label htmlFor='first-name'>First Name</label>
+              <input id='first-name' className='input_field' type='text' required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className='input'>
-              <span className='input_field'>Last Name</span>
-              <input className='input_field' type='text' value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <label htmlFor='last-name'>Last Name</label>
+              <input id='last-name' className='input_field' type='text' required value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
             <div className='input'>
-              <span className='input_field'>Email</span>
-              <input className='input_field' type='email' value={email} onChange={(e) => setEmail(e.target.value)} />
+              <label htmlFor='email'>Email</label>
+              <input id='email' className='input_field' type='email' required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className='input'>
-              <span className='input_field'>Password</span>
-              <input className='input_field' type='password' value={password} onChange={(e) => setPassword(e.target.value)} />
+              <label htmlFor='password'>Password</label>
+              <input id='password' className='input_field' type='password' required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
           </div>
           <button className='submit' type='submit'>Create Account</button>

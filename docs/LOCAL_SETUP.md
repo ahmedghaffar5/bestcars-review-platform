@@ -1,47 +1,90 @@
 # Local setup
 
-## Prerequisites
-
-- Python 3.12 with the packages in `server/requirements.txt`
-- Node.js 18 or newer
-- Docker Desktop with its engine running for the official MongoDB integration
-
-## Windows PowerShell
+These commands are for the existing Windows checkout. Run PowerShell commands
+from the repository root:
 
 ```powershell
-Set-Location .\server
-python -m pip install -r requirements.txt
+python --version
+node --version
+npm --version
+docker version
+docker compose version
+python -m pip install -r .\server\requirements.txt
+```
+
+## MongoDB and Express
+
+```powershell
+Push-Location .\server\database
+docker compose config
+docker compose up --build -d
+docker compose ps
+Pop-Location
+curl.exe -i http://localhost:3030/fetchDealers
+curl.exe -i http://localhost:3030/fetchDealers/Kansas
+curl.exe -i http://localhost:3030/fetchDealer/3
+curl.exe -i http://localhost:3030/fetchReviews/dealer/29
+```
+
+The Compose file uses the named `database_mongo_data` volume. Do not use
+`docker compose down -v` when testing persistence.
+
+## Flask sentiment service
+
+```powershell
+Push-Location .\server\djangoapp\microservices
+docker build -t bestcars-sentiment:local .
+docker run --rm -p 5000:5000 bestcars-sentiment:local
+Pop-Location
+curl.exe http://localhost:5000/analyze/Fantastic%20services
+curl.exe http://localhost:5000/analyze/Terrible%20service
+curl.exe http://localhost:5000/analyze/The%20car%20is%20blue
+```
+
+The image downloads the VADER lexicon during the image build, so runtime does not
+depend on an internet download.
+
+## Django and React development checks
+
+```powershell
+Push-Location .\server
+python manage.py check
+python manage.py makemigrations --check --dry-run
 python manage.py migrate
-Set-Location .\database
-npm install
-docker compose up --build
-```
-
-In another terminal:
-
-```powershell
-Set-Location .\server
+python manage.py test
 python manage.py runserver 8000
+Pop-Location
+
+Push-Location .\server\frontend
+npm ci
+$env:CI = 'true'
+npm run build
+Remove-Item Env:CI -ErrorAction SilentlyContinue
+Pop-Location
 ```
 
-The Code Engine-compatible Flask service can be run locally with:
+Use `/djangoapp/csrf` before a browser or cURL review POST when a CSRF cookie is
+needed. Login and registration retain their IBM-compatible JSON contracts; logout
+supports the required GET route and ends the server session.
+
+## Full local Compose topology
+
+To run Django with service-DNS URLs (`api:3030` and `sentiment:5000`):
 
 ```powershell
-Set-Location .\server\djangoapp\microservices
-python app.py
+Push-Location .\server
+docker compose -f docker-compose.local.yml config
+docker compose -f docker-compose.local.yml up --build -d
+docker compose -f docker-compose.local.yml ps
+Pop-Location
 ```
 
-## Linux/bash
+Stop only this stack with `docker compose -f .\server\docker-compose.local.yml
+down`; omit `-v` to preserve Mongo and SQLite data.
 
-```bash
-cd server
-python3 -m pip install -r requirements.txt
-python3 manage.py migrate
-cd database
-npm install
-docker compose up --build
-```
+If Docker reports `containerd-overlayfs/metadata_v2.db: read-only file system`
+during a build, stop and resolve Docker Desktop storage/engine health before
+retrying. Do not use `docker system prune`, reset Docker Desktop, or delete
+volumes as a workaround for this project.
 
-In another terminal, run `python3 manage.py runserver 8000`. Run the Flask service with `python3 app.py` from `server/djangoapp/microservices`.
-
-Set `BACKEND_URL` and `SENTIMENT_ANALYZER_URL` when the services are not on their local defaults. The legacy lowercase names in `server/djangoapp/.env` are still accepted for course compatibility.
+Linux uses the same commands with `/` paths and `curl` instead of `curl.exe`.

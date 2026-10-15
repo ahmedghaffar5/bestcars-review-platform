@@ -1,38 +1,84 @@
-﻿name: CI/CD
+name: Lint Code
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, master]
   pull_request:
+    branches: [main, master]
 
 jobs:
-  lint-and-build:
+  lint_python:
+    name: Lint Python Files
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+      - name: Install Flake8
+        run: python -m pip install flake8
+      - name: Run Flake8
+        run: >
+          flake8 server
+          --exclude=server/frontend,server/.venv,server/djangoapp/migrations
+          --max-line-length=120
 
-      - name: Install Python lint tools
-        run: pip install flake8
-
-      - name: Lint Python code
-        run: flake8 server --exclude=server/frontend,node_modules,*/migrations/* --max-line-length=120
-
+  lint_js:
+    name: Lint JavaScript Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Install JS lint tool
-        run: npm install -g jshint
-
-      - name: Lint JS files
+          node-version: '20'
+      - name: Install JSHint
+        run: npm install --global jshint
+      - name: Run JSHint
         run: jshint --config server/database/.jshintrc server/database/*.js
 
-      - name: Build React app
-        run: npm install --prefix server/frontend && npm run build --prefix server/frontend
+  react_build:
+    name: Build React Application
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/frontend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: server/frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build with strict CI warnings
+        env:
+          CI: true
+        run: npm run build
+
+  django_tests:
+    name: Run Django Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check and test
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py test

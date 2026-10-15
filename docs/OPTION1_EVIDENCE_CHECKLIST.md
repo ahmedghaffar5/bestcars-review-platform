@@ -33,4 +33,14 @@ Option 1 is the only submission path used here. Local command evidence is stored
 | 27 | Deployed dealer-detail screenshot | PENDING-IBM-LAB |
 | 28 | Deployed posted-review screenshot | PENDING-IBM-LAB |
 
-Docker Compose configuration is prepared and parses successfully, but the Docker daemon is unavailable in this environment. Official Docker-based MongoDB evidence remains BLOCKED; the audit separately verified Mongoose persistence against a real local MongoDB daemon and did not treat the in-memory fallback as evidence.
+Docker evidence status: the fresh Django image build and complete Django/API/
+sentiment Compose integration are **UNVERIFIED — DEFERRED TO IBM CLOUD**. The
+last attempted build was blocked by BuildKit's read-only
+`containerd-overlayfs` metadata filesystem. This handoff performs no Docker
+build, Compose start, container restart, or retry. The existing named
+`database_mongo_data` volume was preserved, and no in-memory fallback is treated
+as evidence.
+
+The source, Docker, workflow, Kubernetes, and documentation artifacts are
+prepared for GitHub review. GitHub-hosted and IBM Cloud evidence remains
+pending until the user performs those hosted steps and captures genuine output.

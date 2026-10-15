@@ -4,3 +4,4 @@ Pillow
 gunicorn
 python-dotenv
 nltk
+whitenoise

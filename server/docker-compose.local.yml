@@ -1,0 +1,58 @@
+services:
+  mongo:
+    image: mongo:8.0.3
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - local_mongo_data:/data/db
+
+  api:
+    build:
+      context: ./database
+    environment:
+      MONGO_URI: mongodb://mongo:27017/dealershipsDB
+      PORT: 3030
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3030/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "3030:3030"
+
+  sentiment:
+    build:
+      context: ./djangoapp/microservices
+    ports:
+      - "5000:5000"
+
+  django:
+    build:
+      context: .
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,django
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:8000
+      BACKEND_URL: http://api:3030
+      SENTIMENT_ANALYZER_URL: http://sentiment:5000
+      DJANGO_SECRET_KEY: local-compose-change-this-secret
+      DJANGO_DB_PATH: /data/db.sqlite3
+    depends_on:
+      api:
+        condition: service_healthy
+      sentiment:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    volumes:
+      - local_django_data:/data
+
+volumes:
+  local_mongo_data:
+  local_django_data:

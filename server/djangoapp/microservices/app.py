@@ -4,13 +4,8 @@ import nltk
 from flask import Flask, jsonify
 from nltk.sentiment import SentimentIntensityAnalyzer
 
-try:
-    nltk.data.find('sentiment/vader_lexicon.zip')
-except LookupError:
-    nltk.download('vader_lexicon', quiet=True)
-
 app = Flask("Sentiment Analyzer")
-
+nltk.data.path.insert(0, os.path.join(os.path.dirname(__file__), 'nltk_data'))
 sia = SentimentIntensityAnalyzer()
 
 
@@ -24,15 +19,12 @@ def home():
 def analyze_sentiment(input_txt):
 
     scores = sia.polarity_scores(input_txt)
-    print(scores)
-    pos = float(scores['pos'])
-    neg = float(scores['neg'])
-    neu = float(scores['neu'])
-    res = "positive"
-    print("pos neg nue ", pos, neg, neu)
-    if (neg > pos and neg > neu):
+    compound = scores['compound']
+    if compound >= 0.05:
+        res = "positive"
+    elif compound <= -0.05:
         res = "negative"
-    elif (neu > neg and neu > pos):
+    else:
         res = "neutral"
     return jsonify({"sentiment": res})
 

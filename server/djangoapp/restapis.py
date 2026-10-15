@@ -9,7 +9,7 @@ load_dotenv()
 
 def _configured_url(primary_name, legacy_name, default):
     value = os.getenv(primary_name) or os.getenv(legacy_name) or default
-    if 'your ' in value.lower() or 'localhost' not in value and '://' not in value:
+    if 'your ' in value.lower() or '://' not in value:
         return default
     return value.rstrip('/')
 
@@ -33,7 +33,10 @@ def analyze_review_sentiments(text):
     response = requests.get(f'{sentiment_analyzer_url}/analyze/{cleaned}', timeout=10)
     response.raise_for_status()
     payload = response.json()
-    return payload['sentiment']
+    sentiment = payload.get('sentiment')
+    if sentiment not in {'positive', 'negative', 'neutral'}:
+        raise ValueError('Sentiment service returned an invalid sentiment')
+    return sentiment
 
 
 def post_review(data_dict):

@@ -23,6 +23,8 @@ const parseBoolean = (value) => (
   value === true || ['true', '1', 'yes'].includes(String(value).toLowerCase())
 );
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const seedDatabase = async () => {
   try {
     await Promise.all([
@@ -48,11 +50,18 @@ mongoose.connect(mongoUri)
   })
   .catch((error) => {
     console.error('MongoDB connection failed:', error.message);
-    process.exitCode = 1;
+    process.exit(1);
   });
 
 app.get('/', async (req, res) => {
   res.send('Welcome to the Mongoose API');
+});
+
+app.get('/health', (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ status: 'unavailable' });
+  }
+  return res.json({ status: 'ok' });
 });
 
 app.get('/fetchReviews', async (req, res) => {
@@ -67,6 +76,9 @@ app.get('/fetchReviews', async (req, res) => {
 app.get('/fetchReviews/dealer/:id', async (req, res) => {
   try {
     const dealerId = Number(req.params.id);
+    if (!Number.isInteger(dealerId)) {
+      return res.status(400).json({ error: 'Invalid dealer ID' });
+    }
     const documents = await Reviews.find({ dealership: dealerId }).sort({ time: -1, id: -1 });
     res.json(documents);
   } catch (error) {
@@ -86,8 +98,11 @@ app.get('/fetchDealers', async (req, res) => {
 app.get('/fetchDealers/:state', async (req, res) => {
   try {
     const stateName = req.params.state;
+    if (!stateName.trim()) {
+      return res.status(400).json({ error: 'State is required' });
+    }
     const documents = await Dealerships.find({
-      state: { $regex: new RegExp(`^${stateName}$`, 'i') }
+      state: { $regex: new RegExp(`^${escapeRegex(stateName)}$`, 'i') }
     }).sort({ id: 1 });
     res.json(documents);
   } catch (error) {
@@ -98,7 +113,13 @@ app.get('/fetchDealers/:state', async (req, res) => {
 app.get('/fetchDealer/:id', async (req, res) => {
   try {
     const dealerId = Number(req.params.id);
+    if (!Number.isInteger(dealerId)) {
+      return res.status(400).json({ error: 'Invalid dealer ID' });
+    }
     const documents = await Dealerships.find({ id: dealerId });
+    if (!documents.length) {
+      return res.status(404).json({ error: 'Dealer not found' });
+    }
     res.json(documents);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching documents' });
@@ -108,8 +129,22 @@ app.get('/fetchDealer/:id', async (req, res) => {
 app.post('/insert_review', async (req, res) => {
   try {
     const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!data || !data.review || !data.dealership || !data.name) {
+    const dealership = Number(data && data.dealership);
+    const carYear = Number(data && data.car_year);
+    if (
+      !data ||
+      !String(data.review || '').trim() ||
+      !Number.isInteger(dealership) ||
+      !String(data.name || '').trim() ||
+      !String(data.car_make || '').trim() ||
+      !String(data.car_model || '').trim() ||
+      !Number.isInteger(carYear)
+    ) {
       return res.status(400).json({ error: 'Missing review payload' });
+    }
+    const dealerExists = await Dealerships.exists({ id: dealership });
+    if (!dealerExists) {
+      return res.status(404).json({ error: 'Dealer not found' });
     }
 
     const documents = await Reviews.find().sort({ id: -1 }).limit(1);
@@ -118,13 +153,13 @@ app.post('/insert_review', async (req, res) => {
     const review = new Reviews({
       id: newId,
       name: data.name || 'Customer',
-      dealership: Number(data.dealership),
+      dealership,
       review: data.review,
       purchase: parseBoolean(data.purchase),
       purchase_date: data.purchase_date || '',
       car_make: data.car_make || '',
       car_model: data.car_model || '',
-      car_year: Number(data.car_year || 2023),
+      car_year: carYear,
       time: data.time || new Date().toISOString(),
       user_id: data.user_id || 0,
       sentiment: data.sentiment || 'neutral',
