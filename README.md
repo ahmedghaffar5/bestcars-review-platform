@@ -1,7 +1,7 @@
 # Best Cars
 ### A full-stack dealership review platform with sentiment analysis
 
-[![CI](https://github.com/ahmedghaffar5/xrwvm-fullstack_developer_capstone/actions/workflows/main.yml/badge.svg)](https://github.com/ahmedghaffar5/xrwvm-fullstack_developer_capstone/actions/workflows/main.yml)
+[![CI](https://github.com/ahmedghaffar5/bestcars-review-platform/actions/workflows/main.yml/badge.svg)](https://github.com/ahmedghaffar5/bestcars-review-platform/actions/workflows/main.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Browse dealerships, filter by state, and share a review with its automatically
@@ -68,8 +68,8 @@ Docker Engine/Desktop with Compose v2, and Git. The setup helper also works with
 Python 3.10+. A fresh frontend build is required before building the Django image.
 
 ```bash
-git clone https://github.com/ahmedghaffar5/xrwvm-fullstack_developer_capstone.git
-cd xrwvm-fullstack_developer_capstone
+git clone https://github.com/ahmedghaffar5/bestcars-review-platform.git
+cd bestcars-review-platform
 python scripts/init_env.py
 cd server/frontend
 npm ci --include=dev --no-audit --no-fund
