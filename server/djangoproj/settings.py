@@ -14,9 +14,13 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load local root configuration before reading Django environment values.
+load_dotenv(BASE_DIR.parent / '.env', override=False)
 
 
 # Quick-start development settings - unsuitable for production
@@ -159,14 +163,21 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATICFILES_DIRS = [
-    BASE_DIR / 'frontend' / 'static',
-    BASE_DIR / 'frontend' / 'build',
-]
+# Best Cars portfolio static mapping: build/static -> /static/.
+STATICFILES_DIRS = [BASE_DIR / 'frontend' / 'static']
+REACT_STATIC_DIR = BASE_DIR / 'frontend' / 'build' / 'static'
+if REACT_STATIC_DIR.is_dir():
+    STATICFILES_DIRS.append(REACT_STATIC_DIR)
 
-STATICFILES_STORAGE = (
-    'whitenoise.storage.CompressedManifestStaticFilesStorage'
-)
+# React already hashes asset names; avoid a second manifest dependency.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False

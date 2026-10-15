@@ -1,3 +1,5 @@
+# Template only. Supply your actual image and namespace-local Secrets before applying.
+# This single-replica SQLite demonstration does not provide durable database storage.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,18 +16,39 @@ spec:
       labels:
         run: dealership
     spec:
+      imagePullSecrets:
+        - name: icr-secret
       containers:
         - name: dealership
-          image: us.icr.io/your-name-space/dealership:latest
+          image: us.icr.io/REPLACE_WITH_NAMESPACE/dealership:REPLACE_WITH_TAG
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2G"
+            limits:
+              cpu: "1"
+              memory: "2G"
           ports:
             - containerPort: 8000
               protocol: TCP
           env:
             - name: DJANGO_DEBUG
               value: "0"
+            - name: DJANGO_SESSION_COOKIE_SECURE
+              value: "1"
+            - name: DJANGO_CSRF_COOKIE_SECURE
+              value: "1"
             - name: DJANGO_ALLOWED_HOSTS
-              value: "localhost"
+              valueFrom:
+                secretKeyRef:
+                  name: dealership-runtime
+                  key: django-allowed-hosts
+            - name: DJANGO_CSRF_TRUSTED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: dealership-runtime
+                  key: csrf-trusted-origins
             - name: BACKEND_URL
               valueFrom:
                 secretKeyRef:

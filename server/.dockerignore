@@ -1,9 +1,19 @@
+.git
 .venv
-__pycache__
-*.pyc
-db.sqlite3
+venv
+djangoenv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/.env
+**/.env.*
+**/*.sqlite3
+**/*.sqlite3-*
+**/*.log
+**/*.pem
+**/*.key
 static
-frontend/node_modules
-frontend/build
 frontend/.cache
-.env
+frontend/coverage
+Dockerfile.lab
+# frontend/build is deliberately included: the Python image consumes the host-built bundle.
