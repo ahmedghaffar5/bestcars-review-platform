@@ -38,7 +38,17 @@ const Header = () => {
         </nav>
         <div className="header-actions">
           {status === 'loading' || status === 'logout-pending' ? (
-            <span className="muted" role="status">{status === 'logout-pending' ? 'Signing out…' : 'Checking session…'}</span>
+            status === 'loading' ? (
+              <>
+                <span className="sr-only" role="status">Checking session…</span>
+                <span className="auth-skeleton" data-testid="auth-loading-placeholder" aria-hidden="true">
+                  <span />
+                  <span />
+                </span>
+              </>
+            ) : (
+              <span className="muted" role="status">Signing out…</span>
+            )
           ) : status === 'error' ? (
             <button className="button button-secondary" type="button" onClick={() => refreshSession().catch(() => {})}>Retry session</button>
           ) : authenticated ? (
