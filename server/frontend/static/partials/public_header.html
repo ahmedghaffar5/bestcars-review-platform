@@ -1,0 +1,19 @@
+<header class="site-header" data-public-header data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}" data-username="{{ request.user.username|default:'' }}">
+  <div class="site-container header-inner">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span>◆</span></span><span>Best Cars</span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="public-navigation"><span class="sr-only">Toggle navigation</span>Menu</button>
+    <nav id="public-navigation" class="nav-links" data-open="false" aria-label="Primary navigation">
+      <a href="/">Home</a><a href="/dealers">Dealerships</a><a href="/about">About</a><a href="/contact">Contact</a>
+    </nav>
+    <div class="header-actions" data-account-controls>
+      {% if request.user.is_authenticated %}
+        <span class="muted" aria-label="Signed in as {{ request.user.username }}">{{ request.user.username }}</span>
+        <button class="button button-secondary" type="button" data-logout>Log out</button>
+      {% else %}
+        <a href="/login">Log in</a><a class="button button-primary" href="/register">Join free</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="site-container session-error" data-session-message hidden role="alert"></div>
+</header>
+<script src="/static/public-auth.js" defer></script>

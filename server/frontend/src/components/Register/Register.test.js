@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Register from './Register';
+import { AuthProvider } from '../../auth/AuthContext';
 
 describe('Register', () => {
   beforeEach(() => {
@@ -13,7 +14,7 @@ describe('Register', () => {
       ok: true,
       json: () => Promise.resolve({ userName: 'new-driver' }),
     }));
-    render(<Register />);
+    render(<AuthProvider><Register /></AuthProvider>);
 
     const values = {
       username: 'new-driver',
@@ -45,11 +46,11 @@ describe('Register', () => {
       ok: false,
       json: () => Promise.resolve({ message: 'Username already exists' }),
     }));
-    render(<Register />);
+    render(<AuthProvider><Register /></AuthProvider>);
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'taken' } });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Username already exists');
+    expect(await screen.findByText('Username already exists')).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toHaveValue('taken');
   });
 });

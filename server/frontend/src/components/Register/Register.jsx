@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Header from '../Header/Header';
 import Footer from '../Footer';
+import { useAuth } from '../../auth/AuthContext';
 
 const Register = () => {
+  const { setAuthenticated } = useAuth();
   const [form, setForm] = useState({ userName: '', firstName: '', lastName: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -16,6 +18,7 @@ const Register = () => {
       const response = await fetch('/djangoapp/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Registration failed.');
+      setAuthenticated(result.userName);
       window.location.assign('/');
     } catch (requestError) {
       setError(requestError.message);

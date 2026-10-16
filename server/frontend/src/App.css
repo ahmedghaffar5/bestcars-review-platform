@@ -32,6 +32,8 @@
 .check-row { display: flex; align-items: center; gap: .6rem; color: var(--secondary); }
 .check-row input { width: 1.1rem; height: 1.1rem; accent-color: var(--champagne); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.session-error { border-top: 1px solid var(--negative); color: #ffd2d2; padding: .45rem 0; font-size: .85rem; }
+.session-error button { border: 0; background: transparent; color: var(--champagne); cursor: pointer; text-decoration: underline; }
 
 @media (max-width: 760px) {
   .page-main { padding-top: 2rem; }

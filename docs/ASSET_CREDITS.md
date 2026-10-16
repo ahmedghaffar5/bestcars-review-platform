@@ -2,7 +2,7 @@
 
 The redesign intentionally uses an original image-free editorial treatment.
 The hero is composed from CSS gradients and geometric facet lines authored in
-`server/frontend/static/style.css`; it does not imply that a photograph depicts
+`server/frontend/styles/obsidian.input.css`; it does not imply that a photograph depicts
 a listed dealership or its inventory.
 
 An initial bounded search checked Wikimedia Commons as a possible source for a

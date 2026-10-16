@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../auth/AuthContext';
 
 const links = [
   ['/', 'Home'],
@@ -8,21 +9,8 @@ const links = [
 ];
 
 const Header = () => {
-  const [session, setSession] = useState({ authenticated: false, userName: '' });
+  const { status, authenticated, userName, logout, refreshSession } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    fetch('/djangoapp/session')
-      .then((response) => response.json())
-      .then((result) => {
-        if (active) setSession(result);
-      })
-      .catch(() => {
-        if (active) setSession({ authenticated: false, userName: '' });
-      });
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -31,14 +19,6 @@ const Header = () => {
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, []);
-
-  const logout = async (event) => {
-    event.preventDefault();
-    const response = await fetch('/djangoapp/logout');
-    if (!response.ok) return;
-    setSession({ authenticated: false, userName: '' });
-    window.location.assign('/');
-  };
 
   const currentPath = window.location.pathname;
   return (
@@ -57,10 +37,14 @@ const Header = () => {
           ))}
         </nav>
         <div className="header-actions">
-          {session.authenticated ? (
+          {status === 'loading' || status === 'logout-pending' ? (
+            <span className="muted" role="status">{status === 'logout-pending' ? 'Signing out…' : 'Checking session…'}</span>
+          ) : status === 'error' ? (
+            <button className="button button-secondary" type="button" onClick={() => refreshSession().catch(() => {})}>Retry session</button>
+          ) : authenticated ? (
             <>
-              <span className="muted" aria-label={`Signed in as ${session.userName}`}>{session.userName}</span>
-              <a className="button button-secondary" href="/djangoapp/logout" onClick={logout}>Log out</a>
+              <span className="muted" aria-label={`Signed in as ${userName}`}>{userName}</span>
+              <button className="button button-secondary" type="button" onClick={logout} disabled={status === 'logout-pending'}>Log out</button>
             </>
           ) : (
             <>
@@ -70,6 +54,7 @@ const Header = () => {
           )}
         </div>
       </div>
+      {status === 'error' && <div className="site-container session-error" role="alert">Session status is unavailable. Please retry before using account actions.</div>}
     </header>
   );
 };
