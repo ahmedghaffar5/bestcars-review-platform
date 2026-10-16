@@ -2,14 +2,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer';
+import { useAuth } from '../../auth/AuthContext';
 
 const sentimentName = (value) => ['positive', 'negative', 'neutral'].includes(value) ? value : 'neutral';
 
 const Dealer = () => {
   const { id } = useParams();
+  const { authenticated, status: authStatus } = useAuth();
   const [dealer, setDealer] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reviewError, setReviewError] = useState('');
   const [dealerError, setDealerError] = useState('');
@@ -18,10 +19,9 @@ const Dealer = () => {
     setLoading(true);
     setDealerError('');
     setReviewError('');
-    const [dealerResponse, reviewsResponse, sessionResponse] = await Promise.all([
+    const [dealerResponse, reviewsResponse] = await Promise.all([
       fetch(`/djangoapp/dealer/${id}`),
       fetch(`/djangoapp/reviews/dealer/${id}`),
-      fetch('/djangoapp/session'),
     ]);
     const dealerResult = await dealerResponse.json();
     if (!dealerResponse.ok || dealerResult.status !== 200 || !dealerResult.dealer?.length) throw new Error(dealerResult.message || 'Dealer not found.');
@@ -29,8 +29,6 @@ const Dealer = () => {
     const reviewsResult = await reviewsResponse.json();
     if (!reviewsResponse.ok || reviewsResult.status !== 200) setReviewError(reviewsResult.message || 'Reviews are temporarily unavailable.');
     else setReviews(Array.isArray(reviewsResult.reviews) ? reviewsResult.reviews : []);
-    const sessionResult = await sessionResponse.json();
-    setIsLoggedIn(sessionResult.authenticated === true);
     setLoading(false);
   }, [id]);
 
@@ -56,7 +54,7 @@ const Dealer = () => {
                 <h1>{dealer.full_name}</h1>
                 <p className="muted">{[dealer.city, dealer.address, dealer.zip, dealer.state].filter(Boolean).join(' · ')}</p>
               </div>
-              <a className="button button-primary" href={isLoggedIn ? `/postreview/${id}` : `/login?next=/postreview/${id}`}>{isLoggedIn ? 'Write a review' : 'Sign in to review'}</a>
+              {authStatus === 'authenticated' && authenticated ? <a className="button button-primary" href={`/postreview/${id}`}>Write a review</a> : authStatus === 'anonymous' ? <a className="button button-primary" href={`/login?next=/postreview/${id}`}>Sign in to review</a> : <span className="button button-secondary" role="status">Checking account…</span>}
             </div>
             <section className="page-section" aria-labelledby="reviews-heading">
               <div className="page-heading">

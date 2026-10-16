@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer';
+import { useAuth } from '../../auth/AuthContext';
 
 const PostReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { status: authStatus } = useAuth();
   const [dealer, setDealer] = useState({});
   const [carModels, setCarModels] = useState([]);
   const [review, setReview] = useState('');
@@ -19,22 +21,27 @@ const PostReview = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
-    const [dealerResponse, carsResponse, sessionResponse] = await Promise.all([
-      fetch(`/djangoapp/dealer/${id}`), fetch('/djangoapp/get_cars'), fetch('/djangoapp/session'),
-    ]);
-    const dealerResult = await dealerResponse.json();
-    const carsResult = await carsResponse.json();
-    const sessionResult = await sessionResponse.json();
-    if (!sessionResult.authenticated) {
+    if (authStatus === 'loading') return;
+    if (authStatus === 'error') {
+      setError('Session status is unavailable. Retry from the navigation before submitting a review.');
+      setLoading(false);
+      return;
+    }
+    if (authStatus === 'anonymous') {
       navigate(`/login?next=/postreview/${id}`);
       return;
     }
+    const [dealerResponse, carsResponse] = await Promise.all([
+      fetch(`/djangoapp/dealer/${id}`), fetch('/djangoapp/get_cars'),
+    ]);
+    const dealerResult = await dealerResponse.json();
+    const carsResult = await carsResponse.json();
     if (!dealerResponse.ok || dealerResult.status !== 200 || !dealerResult.dealer?.length) throw new Error('Unable to load dealer.');
     if (!carsResponse.ok || !Array.isArray(carsResult.CarModels)) throw new Error('Unable to load vehicle options.');
     setDealer(dealerResult.dealer[0]);
     setCarModels(carsResult.CarModels);
     setLoading(false);
-  }, [id, navigate]);
+  }, [authStatus, id, navigate]);
 
   useEffect(() => { load().catch((requestError) => { setError(requestError.message); setLoading(false); }); }, [load]);
 

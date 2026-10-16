@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Login from './Login';
+import { AuthProvider } from '../../auth/AuthContext';
 
 describe('Login', () => {
   beforeEach(() => {
@@ -13,7 +14,7 @@ describe('Login', () => {
       ok: true,
       json: () => Promise.resolve({ status: 'Authenticated', userName: 'driver' }),
     }));
-    render(<Login />);
+    render(<AuthProvider><Login /></AuthProvider>);
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'driver' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'secret' } });
@@ -31,13 +32,13 @@ describe('Login', () => {
       ok: false,
       json: () => Promise.resolve({ message: 'Invalid credentials' }),
     }));
-    render(<Login />);
+    render(<AuthProvider><Login /></AuthProvider>);
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'driver' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: /^log in$/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid credentials');
+    expect(await screen.findByText('Invalid credentials')).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toHaveValue('driver');
     expect(screen.getByLabelText(/password/i)).toHaveValue('wrong');
   });

@@ -6,31 +6,12 @@
   <link rel="stylesheet" href="/static/css/obsidian.css"><link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="site-shell">
-  <header class="site-header"><div class="site-container header-inner">
-    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span>◆</span></span><span>Best Cars</span></a>
-    <nav class="nav-links" aria-label="Primary navigation"><a href="/" aria-current="page">Home</a><a href="/dealers">Dealerships</a><a href="/about">About</a><a href="/contact">Contact</a></nav>
-    <div class="header-actions" id="loginlogout"><a href="/login">Log in</a><a class="button button-primary" href="/register">Join free</a></div>
-  </div></header>
+  {% include "partials/public_header.html" %}
   <main>
     <section class="home-hero"><div class="site-container home-hero-content"><span class="eyebrow">A more considered way to browse</span><h1>A clearer view of your next dealership.</h1><p>Explore the directory, read real customer experiences, and share what you learned. Best Cars keeps the useful details in focus.</p><div style="display:flex;gap:.75rem;flex-wrap:wrap"><a class="button button-primary" href="/dealers">Explore dealerships</a><a class="button button-secondary" href="#how-it-works">How it works</a></div></div></section>
     <section id="how-it-works" class="site-container page-section"><div class="page-heading"><div><span class="eyebrow">Simple by design</span><h2>Discover. Read. Share.</h2></div><p>One directory for the information you can actually use, without pretending a sentiment label is a star rating.</p></div><div class="home-steps"><article class="card"><span class="eyebrow">01</span><h3>Discover</h3><p class="muted">Find sample dealerships by state, name, or city and keep the real address in view.</p></article><article class="card"><span class="eyebrow">02</span><h3>Read</h3><p class="muted">See community notes with automated positive, neutral, or negative text analysis.</p></article><article class="card"><span class="eyebrow">03</span><h3>Share</h3><p class="muted">Sign in and add a specific experience that helps the next driver decide.</p></article></div></section>
     <section class="site-container page-section"><div class="card home-callout"><div><span class="eyebrow">Built for useful context</span><h2>Ready to look closer?</h2><p class="muted">Start with the directory, then open a profile for the details and reviews behind each listing.</p></div><a class="button button-primary" href="/dealers">Browse the directory</a></div></section>
   </main>
   <footer class="site-footer"><div class="site-container"><span>Best Cars · clearer dealership reviews.</span></div></footer>
-  <script>
-    fetch('/djangoapp/session').then((response) => response.json()).then((session) => {
-      if (!session.authenticated) return;
-      const target = document.getElementById('loginlogout');
-      target.replaceChildren();
-      const name = document.createElement('span');
-      name.className = 'muted';
-      name.textContent = session.userName || 'Account';
-      const logout = document.createElement('a');
-      logout.className = 'button button-secondary';
-      logout.href = '/djangoapp/logout';
-      logout.textContent = 'Log out';
-      target.append(name, logout);
-    }).catch(() => {});
-  </script>
 </body>
 </html>

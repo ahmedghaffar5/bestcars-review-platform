@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import Header from '../Header/Header';
 import Footer from '../Footer';
+import { isSafeNextPath, useAuth } from '../../auth/AuthContext';
 
 const safeNext = () => {
   const next = new URLSearchParams(window.location.search).get('next');
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+  return isSafeNextPath(next);
 };
 
 const Login = () => {
+  const { setAuthenticated } = useAuth();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +24,7 @@ const Login = () => {
       const response = await fetch('/djangoapp/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userName, password }) });
       const result = await response.json();
       if (!response.ok || result.status !== 'Authenticated') throw new Error(result.message || 'Those credentials could not be authenticated.');
+      setAuthenticated(result.userName);
       window.location.assign(safeNext());
     } catch (requestError) {
       setError(requestError.message);

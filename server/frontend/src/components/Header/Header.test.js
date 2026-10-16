@@ -1,10 +1,12 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import Header from './Header';
+import { AuthProvider } from '../../auth/AuthContext';
 
 describe('Header mobile navigation', () => {
   beforeEach(() => {
     global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
       json: () => Promise.resolve({ authenticated: false, userName: '' }),
     }));
   });
@@ -14,7 +16,7 @@ describe('Header mobile navigation', () => {
   });
 
   test('opens and closes the navigation with the toggle and Escape', async () => {
-    render(<Header />);
+    render(<AuthProvider><Header /></AuthProvider>);
     await screen.findByRole('link', { name: /log in/i });
     const toggle = screen.getByRole('button', { name: /toggle navigation/i });
     const navigation = screen.getByRole('navigation', { name: /primary/i });

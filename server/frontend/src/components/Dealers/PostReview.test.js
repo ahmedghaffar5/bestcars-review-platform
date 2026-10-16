@@ -2,10 +2,16 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PostReview from './PostReview';
+import { AuthProvider } from '../../auth/AuthContext';
 
 const renderForm = () => render(
   <MemoryRouter initialEntries={['/postreview/1']}>
-    <Routes><Route path="/postreview/:id" element={<PostReview />} /></Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/postreview/:id" element={<PostReview />} />
+        <Route path="/dealer/:id" element={<div>Dealer detail</div>} />
+      </Routes>
+    </AuthProvider>
   </MemoryRouter>,
 );
 
@@ -22,6 +28,7 @@ describe('PostReview', () => {
 
   test('rejects incomplete reviews before posting', async () => {
     renderForm();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith('/djangoapp/dealer/1'));
     await screen.findByRole('button', { name: /publish review/i });
     fireEvent.click(screen.getByRole('button', { name: /publish review/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Review, make, model, and year are required.');

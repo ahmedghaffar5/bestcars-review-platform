@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../../auth/AuthContext';
 import Header from '../Header/Header';
 import Footer from '../Footer';
 
@@ -12,7 +13,7 @@ const Dealers = () => {
   const [selectedState, setSelectedState] = useState(query.get('state') || 'All');
   const [sort, setSort] = useState(query.get('sort') || 'name');
   const [page, setPage] = useState(Number(query.get('page')) || 1);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { authenticated, status: authStatus } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -37,10 +38,6 @@ const Dealers = () => {
 
   useEffect(() => {
     getDealers(selectedState);
-    fetch('/djangoapp/session')
-      .then((response) => response.json())
-      .then((result) => setIsLoggedIn(result.authenticated === true))
-      .catch(() => setIsLoggedIn(false));
   }, [getDealers, selectedState]);
 
   useEffect(() => {
@@ -118,7 +115,7 @@ const Dealers = () => {
                     <span>{dealer.zip}</span>
                   </div>
                   <a className="button button-secondary" href={`/dealer/${dealer.id}`}>View details</a>
-                  {isLoggedIn ? <a className="muted" href={`/postreview/${dealer.id}`} style={{ marginTop: '.7rem', fontSize: '.9rem' }}>Write a review</a> : <a className="muted" href="/login" style={{ marginTop: '.7rem', fontSize: '.9rem' }}>Sign in to review</a>}
+                  {authStatus === 'authenticated' && authenticated ? <a className="muted" href={`/postreview/${dealer.id}`} style={{ marginTop: '.7rem', fontSize: '.9rem' }}>Write a review</a> : authStatus === 'anonymous' ? <a className="muted" href="/login" style={{ marginTop: '.7rem', fontSize: '.9rem' }}>Sign in to review</a> : <span className="muted" role="status" style={{ marginTop: '.7rem', fontSize: '.9rem' }}>Checking account…</span>}
                 </article>
               ))}
             </div>

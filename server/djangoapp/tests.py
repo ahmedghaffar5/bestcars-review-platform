@@ -7,6 +7,35 @@ from .models import CarMake, CarModel
 
 
 class AuthenticationTests(TestCase):
+    def test_logout_post_clears_session_and_preserves_json_contract(self):
+        user = User.objects.create_user(username='logout-user', password='Password-123')
+        self.client.force_login(user)
+        response = self.client.post('/djangoapp/logout')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'userName': ''})
+        self.assertFalse(self.client.get('/djangoapp/session').json()['authenticated'])
+
+    def test_public_home_renders_server_side_account_state_without_cache(self):
+        anonymous = self.client.get('/')
+        self.assertEqual(anonymous.status_code, 200)
+        self.assertContains(anonymous, 'Join free')
+        self.assertNotContains(anonymous, 'data-logout')
+        self.assertEqual(anonymous['Cache-Control'], 'max-age=0, no-cache, no-store, must-revalidate, private')
+
+        user = User.objects.create_user(username='visible-user', password='Password-123')
+        self.client.force_login(user)
+        authenticated = self.client.get('/')
+        self.assertContains(authenticated, 'visible-user')
+        self.assertContains(authenticated, 'data-logout')
+        self.assertNotContains(authenticated, 'href="/djangoapp/logout"')
+
+    def test_public_pages_share_server_rendered_account_header(self):
+        for path in ('/', '/about/', '/contact/'):
+            response = self.client.get(path)
+            self.assertContains(response, 'data-public-header')
+            self.assertContains(response, 'public-auth.js')
+            self.assertNotContains(response, 'href="/djangoapp/logout"')
+
     def test_register_creates_hashed_user_and_session(self):
         response = self.client.post(
             '/djangoapp/register',
