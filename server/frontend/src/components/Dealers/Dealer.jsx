@@ -1,96 +1,93 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import './Dealers.css';
-import '../assets/style.css';
-import positiveIcon from '../assets/positive.png';
-import neutralIcon from '../assets/neutral.png';
-import negativeIcon from '../assets/negative.png';
-import reviewIcon from '../assets/reviewbutton.png';
 import Header from '../Header/Header';
+import Footer from '../Footer';
+
+const sentimentName = (value) => ['positive', 'negative', 'neutral'].includes(value) ? value : 'neutral';
 
 const Dealer = () => {
   const { id } = useParams();
-  const [dealer, setDealer] = useState({});
+  const [dealer, setDealer] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [reviewError, setReviewError] = useState('');
+  const [dealerError, setDealerError] = useState('');
 
-  const getDealer = useCallback(async () => {
-    const response = await fetch(`/djangoapp/dealer/${id}`);
-    const result = await response.json();
-    if (!response.ok || result.status !== 200 || !result.dealer?.length) {
-      throw new Error(result.message || 'Unable to load dealer');
-    }
-    setDealer(result.dealer[0]);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setDealerError('');
+    setReviewError('');
+    const [dealerResponse, reviewsResponse, sessionResponse] = await Promise.all([
+      fetch(`/djangoapp/dealer/${id}`),
+      fetch(`/djangoapp/reviews/dealer/${id}`),
+      fetch('/djangoapp/session'),
+    ]);
+    const dealerResult = await dealerResponse.json();
+    if (!dealerResponse.ok || dealerResult.status !== 200 || !dealerResult.dealer?.length) throw new Error(dealerResult.message || 'Dealer not found.');
+    setDealer(dealerResult.dealer[0]);
+    const reviewsResult = await reviewsResponse.json();
+    if (!reviewsResponse.ok || reviewsResult.status !== 200) setReviewError(reviewsResult.message || 'Reviews are temporarily unavailable.');
+    else setReviews(Array.isArray(reviewsResult.reviews) ? reviewsResult.reviews : []);
+    const sessionResult = await sessionResponse.json();
+    setIsLoggedIn(sessionResult.authenticated === true);
+    setLoading(false);
   }, [id]);
-
-  const getReviews = useCallback(async () => {
-    const response = await fetch(`/djangoapp/reviews/dealer/${id}`);
-    const result = await response.json();
-    if (!response.ok || result.status !== 200) {
-      throw new Error(result.message || 'Unable to load reviews');
-    }
-    setReviews(Array.isArray(result.reviews) ? result.reviews : []);
-  }, [id]);
-
-  const getSession = useCallback(async () => {
-    const response = await fetch('/djangoapp/session');
-    const result = await response.json();
-    setIsLoggedIn(result.authenticated === true);
-  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([getDealer(), getReviews(), getSession()])
-      .catch((requestError) => setError(requestError.message))
-      .finally(() => setLoading(false));
-  }, [getDealer, getReviews, getSession]);
-
-  const sentimentIcon = (sentiment) => {
-    if (sentiment === 'positive') return positiveIcon;
-    if (sentiment === 'negative') return negativeIcon;
-    return neutralIcon;
-  };
+    load().catch((error) => {
+      setDealerError(error.message);
+      setLoading(false);
+    });
+  }, [load]);
 
   return (
-    <div style={{ margin: '20px' }}>
+    <div className="site-shell">
       <Header />
-      {loading && <p role="status">Loading dealer...</p>}
-      {error && <p role="alert">{error}</p>}
-      {!loading && !error && (
-        <>
-          <h1 style={{ color: 'grey' }}>{dealer.full_name}</h1>
-          {isLoggedIn && (
-            <a href={`/postreview/${id}`}>
-              <img
-                src={reviewIcon}
-                style={{ width: '10%', marginLeft: '10px' }}
-                alt="Post a review"
-              />
-            </a>
-          )}
-          <h4 style={{ color: 'grey' }}>
-            {dealer.city}, {dealer.address}, Zip - {dealer.zip}, {dealer.state}
-          </h4>
-          <div className="reviews_panel">
-            {reviews.length === 0 && <p>No reviews yet.</p>}
-            {reviews.map((review) => (
-              <article className="review_panel" key={review.id}>
-                <img
-                  src={sentimentIcon(review.sentiment)}
-                  className="emotion_icon"
-                  alt={`${review.sentiment || 'neutral'} sentiment`}
-                />
-                <div className="review">{review.review}</div>
-                <div className="reviewer">
-                  {review.name} {review.car_make} {review.car_model} {review.car_year}
+      <main className="site-container page-main">
+        {loading && <p className="status" role="status">Loading dealer details...</p>}
+        {dealerError && <div className="alert" role="alert">{dealerError} <button className="button button-secondary" type="button" onClick={load}>Retry</button></div>}
+        {!loading && dealer && (
+          <>
+            <div className="detail-hero">
+              <div>
+                <a className="muted" href="/dealers">← Back to dealerships</a>
+                <span className="eyebrow" style={{ display: 'block', marginTop: '1.5rem' }}>Dealer profile</span>
+                <h1>{dealer.full_name}</h1>
+                <p className="muted">{[dealer.city, dealer.address, dealer.zip, dealer.state].filter(Boolean).join(' · ')}</p>
+              </div>
+              <a className="button button-primary" href={isLoggedIn ? `/postreview/${id}` : `/login?next=/postreview/${id}`}>{isLoggedIn ? 'Write a review' : 'Sign in to review'}</a>
+            </div>
+            <section className="page-section" aria-labelledby="reviews-heading">
+              <div className="page-heading">
+                <div><span className="eyebrow">Community notes</span><h2 id="reviews-heading">Reviews, without the noise.</h2></div>
+                {!reviewError && <span className="muted">{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>}
+              </div>
+              {reviewError && <div className="alert" role="alert">{reviewError}</div>}
+              {!reviewError && reviews.length === 0 && <p className="status">No reviews yet. Be the first to share a useful experience.</p>}
+              {!reviewError && reviews.length > 0 && (
+                <div className="review-list">
+                  {reviews.map((review) => {
+                    const sentiment = sentimentName(review.sentiment);
+                    return (
+                      <article className="card review-card" key={review.id}>
+                        <span className={`sentiment sentiment-${sentiment}`}><span aria-hidden="true">◆</span>{sentiment} sentiment</span>
+                        <blockquote>{review.review}</blockquote>
+                        <div className="review-meta">
+                          <span>{review.name || 'Community reviewer'}</span>
+                          {(review.car_make || review.car_model || review.car_year) && <span>{[review.car_make, review.car_model, review.car_year].filter(Boolean).join(' · ')}</span>}
+                          {review.purchase && <span>Purchase experience</span>}
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
+              )}
+            </section>
+          </>
+        )}
+      </main>
+      <Footer />
     </div>
   );
 };

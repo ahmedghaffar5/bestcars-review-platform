@@ -1,72 +1,30 @@
 import React, { useState } from 'react';
-import './Register.css';
 import Header from '../Header/Header';
+import Footer from '../Footer';
 
 const Register = () => {
-  const [userName, setUserName] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [form, setForm] = useState({ userName: '', firstName: '', lastName: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const update = (key) => (event) => setForm((value) => ({ ...value, [key]: event.target.value }));
 
-  const register = async (e) => {
-    e.preventDefault();
-    const res = await fetch(`${window.location.origin}/djangoapp/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userName,
-        firstName,
-        lastName,
-        email,
-        password,
-      }),
-    });
-
-    const json = await res.json();
-    if (res.ok) {
-      sessionStorage.setItem('username', json.userName);
-      sessionStorage.setItem('firstname', json.firstName || '');
-      sessionStorage.setItem('lastname', json.lastName || '');
-      window.location.href = '/';
-      return;
+  const register = async (event) => {
+    event.preventDefault();
+    setError('');
+    setPending(true);
+    try {
+      const response = await fetch('/djangoapp/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Registration failed.');
+      window.location.assign('/');
+    } catch (requestError) {
+      setError(requestError.message);
+      setPending(false);
     }
-
-    alert(json.message || 'Registration failed.');
   };
 
   return (
-    <div>
-      <Header />
-      <div className='register_container'>
-        <h1 className='header'>Register</h1>
-        <form className='submit_panel' onSubmit={register}>
-          <div className='inputs'>
-            <div className='input'>
-              <label htmlFor='username'>Username</label>
-              <input id='username' className='input_field' type='text' required value={userName} onChange={(e) => setUserName(e.target.value)} />
-            </div>
-            <div className='input'>
-              <label htmlFor='first-name'>First Name</label>
-              <input id='first-name' className='input_field' type='text' required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            </div>
-            <div className='input'>
-              <label htmlFor='last-name'>Last Name</label>
-              <input id='last-name' className='input_field' type='text' required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </div>
-            <div className='input'>
-              <label htmlFor='email'>Email</label>
-              <input id='email' className='input_field' type='email' required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div className='input'>
-              <label htmlFor='password'>Password</label>
-              <input id='password' className='input_field' type='password' required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-          </div>
-          <button className='submit' type='submit'>Create Account</button>
-        </form>
-      </div>
-    </div>
+    <div className="site-shell"><Header /><main className="site-container page-main"><div className="auth-layout card"><aside className="auth-aside"><span className="eyebrow">Join the directory</span><h1>Leave the next driver a clearer view.</h1><p className="muted">Create a free account to contribute thoughtful dealership reviews.</p></aside><form className="auth-form" onSubmit={register}><h2>Create an account</h2><p className="muted">Five simple fields. No invented subscriptions or sales pitches.</p>{error && <div className="alert" role="alert">{error}</div>}<div className="form-grid"><div className="form-field"><label htmlFor="username">Username</label><input id="username" autoComplete="username" required value={form.userName} onChange={update('userName')} /></div><div className="form-field"><label htmlFor="email">Email</label><input id="email" type="email" autoComplete="email" required value={form.email} onChange={update('email')} /></div><div className="form-field"><label htmlFor="first-name">First name</label><input id="first-name" autoComplete="given-name" required value={form.firstName} onChange={update('firstName')} /></div><div className="form-field"><label htmlFor="last-name">Last name</label><input id="last-name" autoComplete="family-name" required value={form.lastName} onChange={update('lastName')} /></div></div><div className="form-field"><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="new-password" required value={form.password} onChange={update('password')} /></div><button className="button button-primary" type="submit" disabled={pending}>{pending ? 'Creating account…' : 'Create account'}</button><p className="muted">Already registered? <a href="/login">Log in</a></p></form></div></main><Footer /></div>
   );
 };
 

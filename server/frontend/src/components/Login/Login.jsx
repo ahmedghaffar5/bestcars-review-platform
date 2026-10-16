@@ -1,73 +1,36 @@
 import React, { useState } from 'react';
-
-import "./Login.css";
 import Header from '../Header/Header';
+import Footer from '../Footer';
 
-const Login = ({ onClose }) => {
-
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [open,setOpen] = useState(true)
-
-  let login_url = window.location.origin+"/djangoapp/login";
-
-  const login = async (e) => {
-    e.preventDefault();
-
-    const res = await fetch(login_url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "userName": userName,
-            "password": password
-        }),
-    });
-    
-    const json = await res.json();
-    if (json.status != null && json.status === "Authenticated") {
-        sessionStorage.setItem('username', json.userName);
-        setOpen(false);        
-    }
-    else {
-      alert("The user could not be authenticated.")
-    }
+const safeNext = () => {
+  const next = new URLSearchParams(window.location.search).get('next');
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
 };
 
-  if (!open) {
-    window.location.href = "/";
+const Login = () => {
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+
+  const login = async (event) => {
+    event.preventDefault();
+    setError('');
+    setPending(true);
+    try {
+      const response = await fetch('/djangoapp/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userName, password }) });
+      const result = await response.json();
+      if (!response.ok || result.status !== 'Authenticated') throw new Error(result.message || 'Those credentials could not be authenticated.');
+      window.location.assign(safeNext());
+    } catch (requestError) {
+      setError(requestError.message);
+      setPending(false);
+    }
   };
-  
 
   return (
-    <div>
-      <Header/>
-    <div onClick={onClose}>
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-        className='modalContainer'
-      >
-          <form className="login_panel" style={{}} onSubmit={login}>
-              <div>
-              <span className="input_field">Username </span>
-              <input type="text"  name="username" placeholder="Username" className="input_field" onChange={(e) => setUserName(e.target.value)}/>
-              </div>
-              <div>
-              <span className="input_field">Password </span>
-              <input name="psw" type="password"  placeholder="Password" className="input_field" onChange={(e) => setPassword(e.target.value)}/>            
-              </div>
-              <div>
-              <input className="action_button" type="submit" value="Login"/>
-              <input className="action_button" type="button" value="Cancel" onClick={()=>setOpen(false)}/>
-              </div>
-              <a className="loginlink" href="/register">Register Now</a>
-          </form>
-      </div>
-    </div>
-    </div>
+    <div className="site-shell"><Header /><main className="site-container page-main"><div className="auth-layout card"><aside className="auth-aside"><span className="eyebrow">Welcome back</span><h1>Good decisions start with good context.</h1><p className="muted">Sign in to share what you learned and keep the directory useful for the next driver.</p></aside><form className="auth-form" onSubmit={login}><h2>Log in</h2><p className="muted">Use your Best Cars account.</p>{error && <div className="alert" role="alert">{error}</div>}<div className="form-field"><label htmlFor="username">Username</label><input id="username" name="username" autoComplete="username" required value={userName} onChange={(event) => setUserName(event.target.value)} /></div><div className="form-field password-row"><label htmlFor="password">Password</label><input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Hide' : 'Show'}</button></div><button className="button button-primary" type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Log in'}</button><p className="muted">New here? <a href="/register">Create an account</a></p></form></div></main><Footer /></div>
   );
 };
 

@@ -24,6 +24,12 @@ docker compose --env-file .env -p bestcars-portfolio -f server/docker-compose.lo
 On Linux use `python3` where appropriate. Review `.env` locally, not in a public
 issue or screenshot. The helper refuses to replace existing settings.
 
+The frontend production command compiles the pinned Tailwind 3.4 stylesheet,
+synchronizes it into `server/frontend/static/css/` for Django-served previews,
+and then builds the React bundle. During UI work, run
+`npm run css:watch` from `server/frontend`; restart/rebuild the Django preview
+after changes so its static-file collection sees the generated stylesheet.
+
 The Compose stack uses internal URLs `http://api:3030` and
 `http://sentiment:5000`. It does not use IBM proxy URLs. Published demo ports bind
 to `127.0.0.1`; MongoDB is not published to the host. Existing lab containers that

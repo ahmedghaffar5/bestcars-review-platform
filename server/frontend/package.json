@@ -14,7 +14,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "css:build": "tailwindcss -i ./styles/obsidian.input.css -o ./public/static/css/obsidian.css --minify && node ./scripts/copy-css.js",
+    "css:watch": "tailwindcss -i ./styles/obsidian.input.css -o ./public/static/css/obsidian.css --watch",
+    "build": "npm run css:build && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -37,6 +39,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "tailwindcss": "^3.4.17"
   }
 }
