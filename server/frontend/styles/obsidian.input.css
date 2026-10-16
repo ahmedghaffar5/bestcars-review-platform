@@ -47,6 +47,10 @@
   .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--platinum); }
   .nav-links a[aria-current="page"] { border-bottom: 1px solid var(--champagne); }
   .header-actions { display: flex; align-items: center; gap: .85rem; color: var(--secondary); font-size: .9rem; }
+  .auth-skeleton { display: inline-flex; width: 10.5rem; min-height: 2.8rem; align-items: center; gap: .65rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--surface); padding: .65rem .8rem; }
+  .auth-skeleton span { display: block; height: .55rem; border-radius: 999px; background: linear-gradient(90deg, var(--border), var(--elevated), var(--border)); background-size: 200% 100%; animation: auth-skeleton-shimmer 1.8s ease-in-out infinite; }
+  .auth-skeleton span:first-child { width: 3.2rem; }
+  .auth-skeleton span:last-child { width: 4.4rem; }
   .menu-toggle { display: none; border: 1px solid var(--border); background: var(--surface); color: var(--platinum); padding: .55rem .7rem; }
   .button { display: inline-flex; min-height: 2.8rem; align-items: center; justify-content: center; gap: .5rem; border: 1px solid transparent; border-radius: .7rem; padding: .65rem 1rem; font-weight: 700; text-decoration: none; cursor: pointer; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
   .button:hover { transform: translateY(-1px); }
@@ -82,4 +86,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+@keyframes auth-skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
