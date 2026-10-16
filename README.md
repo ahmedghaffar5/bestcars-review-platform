@@ -48,7 +48,7 @@ flowchart LR
 
 | Layer | Technology | Responsibility |
 | --- | --- | --- |
-| Interface | React, React Router, Bootstrap | Account forms, directory, filters, review views |
+| Interface | React, React Router, Tailwind CSS CLI | Account forms, directory, filters, review views |
 | Application | Django, Gunicorn, WhiteNoise | Sessions, admin, JSON APIs, built frontend assets |
 | Application data | SQLite | User accounts, sessions, car makes and models |
 | Dealership service | Node.js, Express, Mongoose | Dealership lookup and review persistence |
